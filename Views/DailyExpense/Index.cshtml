@@ -1,0 +1,36 @@
+﻿@model System.Collections.Generic.List<Business.Models.DailyExpense>
+
+@{
+    ViewData["Title"] = "Daily Expenses";
+    var tripId = ViewBag.TripId;
+}
+
+<h1>Daily Expenses</h1>
+
+<p><a asp-action="Create" asp-route-tripId="@tripId" class="btn btn-success">New Expense</a></p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var expense in Model)
+        {
+            <tr>
+                <td>@expense.Date.ToShortDateString()</td>
+                <td>@expense.ExpenseCategory</td>
+                <td>@expense.Description</td>
+                <td>@expense.Amount.ToString("N2")€</td>
+                <td>
+                    <a asp-action="Delete" asp-route-id="@expense.Id" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

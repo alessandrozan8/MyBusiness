@@ -1,0 +1,72 @@
+﻿@model Business.Models.Client
+
+@{
+    ViewData["Title"] = "Crea Cliente";
+    var clientList = ViewBag.ClientList as List<Business.Models.Client>;
+}
+
+<h1>Customers</h1>
+
+<hr />
+<h2>Create New</h2>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Nome" class="control-label">Name</label>
+                <input asp-for="Nome" class="form-control" />
+                <span asp-validation-for="Nome" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Descrizione" class="control-label">Description</label>
+                <input asp-for="Descrizione" class="form-control" />
+                <span asp-validation-for="Descrizione" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Luogo" class="control-label">City</label>
+                <input asp-for="Luogo" class="form-control" />
+                <span asp-validation-for="Luogo" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="margin-top: 5pt;">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <p> </p>
+</div>
+
+@if (clientList != null && clientList.Any())
+{
+    <h2>Existing Customers</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>City</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var client in clientList)
+            {
+                <tr>
+                    <td>@client.Id</td>
+                    <td>@client.Nome</td>
+                    <td>@client.Descrizione</td>
+                    <td>@client.Luogo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

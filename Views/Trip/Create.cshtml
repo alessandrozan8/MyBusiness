@@ -1,0 +1,93 @@
+﻿@model Business.Models.TripCreateViewModel
+
+@{
+    ViewData["Title"] = "New Business Trip";
+    var tripList = ViewBag.TripList as List<Business.Models.Trip>;
+}
+
+<h1>Business Trips</h1>
+
+<hr />
+<h2>Create New</h2>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Trip.ClienteId" class="control-label">Customer</label>
+                <select asp-for="Trip.ClienteId" class="form-control" asp-items="@Model.ClientList">
+                    <option value="">-- Select a Customer --</option>
+                </select>
+                <span asp-validation-for="Trip.ClienteId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Trip.StartDate" class="control-label">Start Date</label>
+                <input asp-for="Trip.StartDate" class="form-control" type="date" />
+                <span asp-validation-for="Trip.StartDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Trip.EndDate" class="control-label">End Date</label>
+                <input asp-for="Trip.EndDate" class="form-control" type="date" />
+                <span asp-validation-for="Trip.EndDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Trip.BudgetPranzo" class="control-label">Lunch Budget</label>
+                <input asp-for="Trip.BudgetPranzo" class="form-control" type="number" step="0.01" />
+                <span asp-validation-for="Trip.BudgetPranzo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Trip.DinnerBudget" class="control-label">Dinner Budget</label>
+                <input asp-for="Trip.DinnerBudget" class="form-control" type="number" step="0.01" />
+                <span asp-validation-for="Trip.DinnerBudget" class="text-danger"></span>
+            </div>
+
+            <div class="form-group" style="margin-top: 5pt;">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+<div>
+    <p> </p>
+</div>
+
+@if (tripList != null && tripList.Any())
+{
+    <h2>Existing Trips</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Customer</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Lunch Budget</th>
+                <th>Dinner Budget</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var trip in tripList)
+            {
+                <tr>
+                    <td>@trip.Id</td>
+                    <td>@trip.Client?.Nome - @trip.Client?.Luogo</td>
+                    <td>@(trip.StartDate.HasValue ? trip.StartDate.Value.ToShortDateString() : "N/A")</td>
+                    <td>@(trip.EndDate.HasValue ? trip.EndDate.Value.ToShortDateString() : "N/A")</td>
+                    <td>@(trip.BudgetPranzo.HasValue ? trip.BudgetPranzo.Value.ToString("N2") + "€" : "N/A")</td>
+                    <td>@(trip.DinnerBudget.HasValue ? trip.DinnerBudget.Value.ToString("N2") + "€" : "N/A")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,60 @@
+﻿@model Business.Models.DailyExpenseCreateViewModel
+
+@{
+    ViewData["Title"] = "Aggiungi Spesa";
+}
+
+<h1>Aggiungi Spesa</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <input type="hidden" asp-for="TripId" /> @* Campo nascosto per TripId *@
+
+            <div class="form-group">
+                <label asp-for="DailyExpense.Date" class="control-label"></label>
+                <input asp-for="DailyExpense.Date" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="DailyExpense.Date" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DailyExpense.ExpenseCategory" class="control-label"></label>
+                <select asp-for="DailyExpense.ExpenseCategory" class="form-control">
+                    <option value="Cena">Dinner</option>
+                    <option value="Pranzo">Lunch</option>
+                    <option value="Altro">Other</option>
+                </select>
+                <span asp-validation-for="DailyExpense.ExpenseCategory" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DailyExpense.Description" class="control-label"></label>
+                <input asp-for="DailyExpense.Description" class="form-control" />
+                <span asp-validation-for="DailyExpense.Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DailyExpense.Amount" class="control-label"></label>
+                <input asp-for="DailyExpense.Amount" class="form-control" type="number" step="0.01" />
+                <span asp-validation-for="DailyExpense.Amount" class="text-danger"></span>
+            </div>
+
+            <div class="form-group" style="margin-top: 5pt;">
+                <input type="submit" value="Aggiungi Spesa" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Torna alla Lista Spese</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,63 @@
+﻿@model List<Business.Models.TripSummaryViewModel>
+
+@{
+    ViewData["Title"] = "Riepilogo Trasferte";
+}
+
+<h1>Business Trip Summary</h1>
+
+<div class="summary-section">
+    <h2>Totals</h2>
+    <p>Total Business Trip Days: @(ViewBag.TotalDays ?? 0)</p>
+    <p>Average Expense per Day: @((ViewBag.AverageExpensePerDay ?? 0m).ToString("N2"))€</p>
+    <p>Total Amount Not Spent: @((ViewBag.TotalAmountNotSpent ?? 0m).ToString("N2"))€</p>
+</div>
+
+<div class="summary-section">
+    <h2>List</h2>
+    <form method="post" asp-action="UpdateTripSummary">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Include</th>
+                    <th>Customer</th>
+                    <th>Start Trip</th>
+                    <th>End Trip</th>
+                    <th>Days</th>
+                    <th>Budget/Day</th>
+                    <th>Total Budget</th>
+                    <th>Total Expense</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <input type="checkbox" asp-for="@Model[i].IsIncluded" onchange="this.form.submit()" />
+                            <input type="hidden" asp-for="@Model[i].TripId" />
+                        </td>
+                        <td>@Model[i].NomeCliente - @Model[i].LuogoTrasferta</td>
+                        <td>@(string.IsNullOrEmpty(Model[i].InizioTrasferta) ? "N/A" : DateTime.Parse(Model[i].InizioTrasferta).ToShortDateString())</td>
+                        <td>@(string.IsNullOrEmpty(Model[i].FineTrasferta) ? "N/A" : DateTime.Parse(Model[i].FineTrasferta).ToShortDateString())</td>
+                        <td>@Model[i].NumeroGiorniTrasferta</td>
+                        <td>@Model[i].BudgetTotalePerGiorno.ToString("N2")€</td>
+                        <td>@Model[i].BudgetTotaleTrasferta.ToString("N2")€</td>
+                        <td>@Model[i].SpesaTotaleEffettiva.ToString("N2")€</td>
+                        <td>
+                            <a asp-controller="DailyExpense" asp-action="Create" asp-route-tripId="@Model[i].TripId" class="btn btn-sm btn-success">New Expense</a>
+                            <a asp-controller="DailyExpense" asp-action="Index" asp-route-tripId="@Model[i].TripId" class="btn btn-sm btn-primary">View Expenses</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
