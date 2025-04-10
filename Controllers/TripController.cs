@@ -9,6 +9,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System;
+using System.Threading.Tasks;
 
 [Authorize]
 public class TripController : Controller
@@ -57,9 +58,22 @@ public class TripController : Controller
                 .Where(de => de.TripId == t.Id)
                 .Sum(de => de.Amount) as decimal?) ?? 0m,
             TripId = t.Id,
-            IsIncluded = true
+            IsIncluded = true,
+            TotalAmountNotSpent = (int)((t.EndDate.HasValue && t.StartDate.HasValue) ? (t.EndDate.Value - t.StartDate.Value).TotalDays : 0) * ((t.BudgetPranzo ?? 0m) + (t.DinnerBudget ?? 0m)) - (_context.DailyExpenses
+                .Where(de => de.TripId == t.Id)
+                .Sum(de => de.Amount) as decimal?) ?? 0m
         })
-        .OrderByDescending(ts => ts.FineTrasferta)
+        .OrderByDescending(ts =>
+        {
+            if (DateTime.TryParse(ts.FineTrasferta, out DateTime fineTrasferta))
+            {
+                return fineTrasferta;
+            }
+            else
+            {
+                return DateTime.MinValue; // Gestisci i casi in cui la conversione fallisce
+            }
+        })
         .ToList();
 
         var includedItems = tripSummaryList.Where(m => m.IsIncluded);
@@ -90,42 +104,48 @@ public class TripController : Controller
         var originalTrips = _context.Trips
             .Include(t => t.Client)
             .Where(t => t.RequestingUserId == userId)
-            .Select(t => new TripSummaryViewModel
-            {
-                NomeCliente = t.Client.Nome,
-                UserId = t.RequestingUserId,
-                LuogoTrasferta = t.Client.Luogo,
-                InizioTrasferta = Convert.ToString(t.StartDate),
-                FineTrasferta = Convert.ToString(t.EndDate),
-                NumeroGiorniTrasferta = (int)((t.EndDate.HasValue && t.StartDate.HasValue) ? (t.EndDate.Value - t.StartDate.Value).TotalDays : 0),
-                BudgetTotalePerGiorno = (t.BudgetPranzo ?? 0m) + (t.DinnerBudget ?? 0m),
-                BudgetTotaleTrasferta = (int)((t.EndDate.HasValue && t.StartDate.HasValue) ? (t.EndDate.Value - t.StartDate.Value).TotalDays : 0) * ((t.BudgetPranzo ?? 0m) + (t.DinnerBudget ?? 0m)),
-                SpesaTotaleEffettiva = (_context.DailyExpenses
-                    .Where(de => de.TripId == t.Id)
-                    .Sum(de => de.Amount) as decimal?) ?? 0m,
-                TripId = t.Id,
-                IsIncluded = true
-            })
-            .OrderByDescending(ts => ts.FineTrasferta)
-            .ToList();
+            .ToList(); // Recupera le trasferte in memoria
 
-        for (int i = 0; i < originalTrips.Count; i++)
+        var tripSummaryList = originalTrips.Select(t => new TripSummaryViewModel
         {
-            var updatedTrip = model.FirstOrDefault(t => t.TripId == originalTrips[i].TripId);
-            if (updatedTrip != null)
+            NomeCliente = t.Client.Nome,
+            UserId = t.RequestingUserId,
+            LuogoTrasferta = t.Client.Luogo,
+            InizioTrasferta = Convert.ToString(t.StartDate),
+            FineTrasferta = Convert.ToString(t.EndDate),
+            NumeroGiorniTrasferta = (int)((t.EndDate.HasValue && t.StartDate.HasValue) ? (t.EndDate.Value - t.StartDate.Value).TotalDays : 0),
+            BudgetTotalePerGiorno = (t.BudgetPranzo ?? 0m) + (t.DinnerBudget ?? 0m),
+            BudgetTotaleTrasferta = (int)((t.EndDate.HasValue && t.StartDate.HasValue) ? (t.EndDate.Value - t.StartDate.Value).TotalDays : 0) * ((t.BudgetPranzo ?? 0m) + (t.DinnerBudget ?? 0m)),
+            SpesaTotaleEffettiva = (_context.DailyExpenses
+                .Where(de => de.TripId == t.Id)
+                .Sum(de => de.Amount) as decimal?) ?? 0m,
+            TripId = t.Id,
+            IsIncluded = model.FirstOrDefault(m => m.TripId == t.Id)?.IsIncluded ?? true,
+            TotalAmountNotSpent = (int)((t.EndDate.HasValue && t.StartDate.HasValue) ? (t.EndDate.Value - t.StartDate.Value).TotalDays : 0) * ((t.BudgetPranzo ?? 0m) + (t.DinnerBudget ?? 0m)) - (_context.DailyExpenses
+                .Where(de => de.TripId == t.Id)
+                .Sum(de => de.Amount) as decimal?) ?? 0m
+        })
+        .OrderByDescending(ts =>
             {
-                originalTrips[i].IsIncluded = updatedTrip.IsIncluded;
-            }
-        }
+                if (DateTime.TryParse(ts.FineTrasferta, out DateTime fineTrasferta))
+                {
+                    return fineTrasferta;
+                }
+                else
+                {
+                    return DateTime.MinValue; // Gestisci i casi in cui la conversione fallisce
+                }
+            })
+        .ToList();
 
-        var includedItems = originalTrips.Where(m => m.IsIncluded);
+        var includedItems = tripSummaryList.Where(m => m.IsIncluded);
         ViewBag.TotalDays = includedItems.Sum(m => m.NumeroGiorniTrasferta);
         ViewBag.TotalExpense = includedItems.Sum(m => m.SpesaTotaleEffettiva);
         ViewBag.TotalBudget = includedItems.Sum(m => m.BudgetTotaleTrasferta);
         ViewBag.AverageExpensePerDay = ViewBag.TotalDays > 0 ? ViewBag.TotalExpense / ViewBag.TotalDays : 0;
         ViewBag.TotalAmountNotSpent = ViewBag.TotalBudget - ViewBag.TotalExpense;
 
-        return View("TripSummary", originalTrips);
+        return View("TripSummary", tripSummaryList);
     }
 
     public IActionResult Create()

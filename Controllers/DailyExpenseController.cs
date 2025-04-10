@@ -112,5 +112,79 @@ namespace Business.Controllers
             }
             return NotFound();
         }
+
+        public class DailyExpenseApiModel
+        {
+            public DateTime Date { get; set; }
+            public decimal Amount { get; set; }
+            public string Category { get; set; }
+            public string Description { get; set; }
+            public string UserId { get; set; }
+        }
+
+        [HttpPost("api/dailyexpense/add")]
+        public IActionResult AddExpenseFromApi([FromBody] DailyExpenseApiModel model)
+        {
+            if (model == null || !ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Verifica se l'ID utente esiste
+            var user = _userManager.FindByIdAsync(model.UserId).Result;
+            if (user == null)
+            {
+                return BadRequest("ID utente non valido.");
+            }
+
+            // Trova il viaggio in corso o il viaggio più recente
+            var tripId = TrovaTripIdCorrenteORecente(model.UserId);
+
+            if (tripId == 0)
+            {
+                return BadRequest("Nessun viaggio trovato per l'utente.");
+            }
+
+            var newExpense = new DailyExpense
+            {
+                Date = model.Date,
+                Amount = decimal.Parse(model.Amount.ToString().Replace(',', '.')),
+                ExpenseCategory = model.Category,
+                Description = model.Description,
+                UserId = model.UserId,
+                InsertionDate = DateTime.Now,
+                TripId = tripId
+            };
+
+            _context.DailyExpenses.Add(newExpense);
+            _context.SaveChanges();
+
+            return Ok(new { message = "Spesa aggiunta con successo" });
+        }
+
+        private int TrovaTripIdCorrenteORecente(string userId)
+        {
+            
+            var tripCorrente = _context.Trips
+                .Where(t => t.StartDate <= DateTime.Now && t.EndDate >= DateTime.Now)
+                .OrderByDescending(t => t.EndDate)
+                .FirstOrDefault();
+
+            if (tripCorrente != null)
+            {
+                return tripCorrente.Id;
+            }
+
+            var tripRecente = _context.Trips
+                .OrderByDescending(t => t.EndDate)
+                .FirstOrDefault();
+
+            if (tripRecente != null)
+            {
+                return tripRecente.Id;
+            }
+
+            return 0;
+        }
     }
 }

@@ -4,60 +4,134 @@
     ViewData["Title"] = "Riepilogo Trasferte";
 }
 
-<h1>Business Trip Summary</h1>
+<div class="container">
+    <h1>Riepilogo Trasferte</h1>
 
-<div class="summary-section">
-    <h2>Totals</h2>
-    <p>Total Business Trip Days: @(ViewBag.TotalDays ?? 0)</p>
-    <p>Average Expense per Day: @((ViewBag.AverageExpensePerDay ?? 0m).ToString("N2"))€</p>
-    <p>Total Amount Not Spent: @((ViewBag.TotalAmountNotSpent ?? 0m).ToString("N2"))€</p>
-</div>
+    <div class="summary-section mb-4">
+        <h2>Riepilogo Generale</h2>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card summary-card interactive" data-target="totalDays">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <i class="fas fa-calendar-day fa-2x mb-2"></i>
+                        <p><strong>Giorni totali:</strong> @(ViewBag.TotalDays ?? 0)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card summary-card interactive" data-target="averageExpense">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <i class="fas fa-euro-sign fa-2x mb-2"></i>
+                        <p><strong>Spesa media/giorno:</strong> @((ViewBag.AverageExpensePerDay ?? 0m).ToString("N2"))€</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card summary-card interactive" data-target="totalNotSpent">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <i class="fas fa-money-bill-alt fa-2x mb-2"></i>
+                        <p><strong>Totale non speso:</strong> @((ViewBag.TotalAmountNotSpent ?? 0m).ToString("N2"))€</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="summary-section">
-    <h2>List</h2>
-    <form method="post" asp-action="UpdateTripSummary">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Include</th>
-                    <th>Customer</th>
-                    <th>Start Trip</th>
-                    <th>End Trip</th>
-                    <th>Days</th>
-                    <th>Budget/Day</th>
-                    <th>Total Budget</th>
-                    <th>Total Expense</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="summary-section">
+        <h2>Elenco Trasferte</h2>
+        <form method="post" asp-action="UpdateTripSummary">
+            <div class="row">
                 @for (int i = 0; i < Model.Count; i++)
                 {
-                    <tr>
-                        <td>
-                            <input type="checkbox" asp-for="@Model[i].IsIncluded" onchange="this.form.submit()" />
-                            <input type="hidden" asp-for="@Model[i].TripId" />
-                        </td>
-                        <td>@Model[i].NomeCliente - @Model[i].LuogoTrasferta</td>
-                        <td>@(string.IsNullOrEmpty(Model[i].InizioTrasferta) ? "N/A" : DateTime.Parse(Model[i].InizioTrasferta).ToShortDateString())</td>
-                        <td>@(string.IsNullOrEmpty(Model[i].FineTrasferta) ? "N/A" : DateTime.Parse(Model[i].FineTrasferta).ToShortDateString())</td>
-                        <td>@Model[i].NumeroGiorniTrasferta</td>
-                        <td>@Model[i].BudgetTotalePerGiorno.ToString("N2")€</td>
-                        <td>@Model[i].BudgetTotaleTrasferta.ToString("N2")€</td>
-                        <td>@Model[i].SpesaTotaleEffettiva.ToString("N2")€</td>
-                        <td>
-                            <a asp-controller="DailyExpense" asp-action="Create" asp-route-tripId="@Model[i].TripId" class="btn btn-sm btn-success">New Expense</a>
-                            <a asp-controller="DailyExpense" asp-action="Index" asp-route-tripId="@Model[i].TripId" class="btn btn-sm btn-primary">View Expenses</a>
-                        </td>
-                    </tr>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card trip-card h-100">
+                            <div class="card-body d-flex flex-column">
+                                <div class="form-check mb-2">
+                                    <input type="checkbox" asp-for="@Model[i].IsIncluded" class="form-check-input" onchange="this.form.submit()" />
+                                    <input type="hidden" asp-for="@Model[i].TripId" />
+                                    <label class="form-check-label">Includi</label>
+                                </div>
+                                <p class="mb-1"><strong>Cliente:</strong> @Model[i].NomeCliente - @Model[i].LuogoTrasferta</p>
+                                <p class="mb-1"><strong>Inizio:</strong> @(string.IsNullOrEmpty(Model[i].InizioTrasferta) ? "N/A" : DateTime.Parse(Model[i].InizioTrasferta).ToShortDateString())</p>
+                                <p class="mb-1"><strong>Fine:</strong> @(string.IsNullOrEmpty(Model[i].FineTrasferta) ? "N/A" : DateTime.Parse(Model[i].FineTrasferta).ToShortDateString())</p>
+                                <p class="mb-1"><strong>Giorni:</strong> @Model[i].NumeroGiorniTrasferta</p>
+                                <p class="mb-1"><strong>Budget/Giorno:</strong> @Model[i].BudgetTotalePerGiorno.ToString("N2")€</p>
+                                <p class="mb-1"><strong>Budget Totale:</strong> @Model[i].BudgetTotaleTrasferta.ToString("N2")€</p>
+                                <p class="mb-1"><strong>Spesa Totale:</strong> @Model[i].SpesaTotaleEffettiva.ToString("N2")€</p>
+                                <p class="mb-1"><strong>Totale non speso:</strong> @Model[i].TotalAmountNotSpent.ToString("N2")€</p>
+                                <div class="mt-auto">
+                                    <div class="btn-group">
+                                        <a asp-controller="DailyExpense" asp-action="Create" asp-route-tripId="@Model[i].TripId" class="btn btn-sm btn-success">Nuova Spesa</a>
+                                        <a asp-controller="DailyExpense" asp-action="Index" asp-route-tripId="@Model[i].TripId" class="btn btn-sm btn-primary">Visualizza Spese</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 }
-            </tbody>
-        </table>
-    </form>
+            </div>
+        </form>
+    </div>
 </div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.getElementById('excludeAll').addEventListener('click', function() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+                checkbox.checked = false;
+            });
+            var actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'excludeAllParam';
+            actionInput.value = 'true';
+            document.querySelector('form').appendChild(actionInput);
+            document.querySelector('form').submit();
+        });
+
+        // Aggiungi un listener di eventi per le card interattive
+        document.querySelectorAll('.summary-card.interactive').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var target = this.getAttribute('data-target');
+                // Implementa la logica per mostrare ulteriori dettagli o filtri
+                alert('Card cliccata: ' + target);
+            });
+        });
+    </script>
 }
+
+<style>
+    .trip-card {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    .summary-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        text-align: center;
+        transition: transform 0.3s ease-in-out;
+    }
+
+        .summary-card:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        .summary-card i {
+            color: #007bff;
+        }
+
+        .summary-card p {
+            text-align: center;
+        }
+
+        .summary-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+</style>
