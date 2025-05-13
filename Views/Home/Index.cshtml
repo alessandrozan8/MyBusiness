@@ -41,21 +41,21 @@
             <div class="col-md-6">
                 <h2>Trip Summary:</h2>
 
-                <div class="card bg-light mb-3">
+                <div class="card summary-card interactive" data-target="amountNotSpent">
                     <div class="card-body">
                         <h5 class="card-title"><i class="fas fa-money-bill-alt"></i> Amount Not Spent</h5>
                         <p class="card-text">@ViewBag.TotalAmountNotSpent.ToString("N2")€</p>
                     </div>
                 </div>
 
-                <div class="card bg-light mb-3">
+                <div class="card summary-card interactive" data-target="totalTrips">
                     <div class="card-body">
                         <h5 class="card-title"><i class="fas fa-route"></i> Total Trips</h5>
                         <p class="card-text">@ViewBag.TotalTrips</p>
                     </div>
                 </div>
 
-                <div class="card bg-light mb-3">
+                <div class="card summary-card interactive" data-target="totalBudget">
                     <div class="card-body">
                         <h5 class="card-title"><i class="fas fa-wallet"></i> Total Budget</h5>
                         <p class="card-text">@ViewBag.TotalBudget.ToString("N2")€</p>
@@ -68,14 +68,27 @@
         {
             <div class="row mt-5">
                 <div class="col-md-6">
-                    <h2>Last Trip:</h2>
-                    <p>Client: @ViewBag.LastTrip.Client?.Nome - @ViewBag.LastTrip.Client?.Luogo</p>
-                    <p>Start Date: @ViewBag.LastTrip.StartDate.ToShortDateString()</p>
-                    <p>End Date: @ViewBag.LastTrip.EndDate.ToShortDateString()</p>
+                    <h2>Latest trip status</h2>
+                    <div class="card trip-card">
+                        <div class="card-body">
+                            @{
+                                string tripStatus = ViewBag.LastTrip.EndDate < DateTime.Now ? "Finished Trip" : "Current Trip";
+                            }
+                            <h4 class="card-title">@tripStatus</h4>
+                            <p class="card-text">
+                                <strong>Client:</strong> @ViewBag.LastTrip.Client?.Nome - @ViewBag.LastTrip.Client?.Luogo<br />
+                                <strong>Start Date:</strong> @ViewBag.LastTrip.StartDate.ToShortDateString()<br />
+                                <strong>End Date:</strong> @ViewBag.LastTrip.EndDate.ToShortDateString()<br />
+                                <strong>Total Budget:</strong> @ViewBag.TotalTripBudget.ToString("N2")€<br />
+                                <strong>Remaining Budget:</strong> @ViewBag.RemainingTripBudget.ToString("N2")€<br />
+                                <strong>Current Average Daily Expense:</strong> @ViewBag.AverageDailyExpense.ToString("N2")€
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-md-6">
-                    <h2>Trip Budget vs Expenses:</h2>
+                    <h2>How much is left?</h2>
                     <canvas id="tripChart"></canvas>
                 </div>
             </div>
@@ -97,3 +110,75 @@ else
         </div>
     </div>
 }
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Aggiungi un listener di eventi per le card interattive
+        document.querySelectorAll('.summary-card.interactive').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var target = this.getAttribute('data-target');
+                // Implementa la logica per mostrare ulteriori dettagli o filtri
+                alert('Card cliccata: ' + target);
+            });
+        });
+
+        // Grafico a linee per il budget residuo giornaliero
+        var ctx = document.getElementById('tripChart').getContext('2d');
+        var tripChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(Json.Serialize(ViewBag.DailyBudgetLabels)), // Etichette dei giorni
+                datasets: [{
+                    label: 'Remaining budget',
+                    data: @Html.Raw(Json.Serialize(ViewBag.DailyBudgetValues)), // Valori del budget residuo
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    .summary-card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        transition: transform 0.3s ease-in-out;
+        margin-bottom: 10px;
+    }
+
+        .summary-card:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        .summary-card i {
+            color: #007bff;
+        }
+
+    .trip-card {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+        .trip-card strong {
+            font-weight: bold;
+        }
+</style>
